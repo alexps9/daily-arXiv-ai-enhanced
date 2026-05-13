@@ -169,11 +169,12 @@ def process_all_items(data: List[Dict], model_name: str, language: str, max_work
     print('Connect to:', model_name, file=sys.stderr)
 
     # 在 system prompt 中明确要求输出 JSON，兼容所有模型（含 reasoner）
+    # 注意：LangChain 模板中花括号须用 {{ }} 转义，否则被当作变量占位符
     json_instruction = (
         "\n\nOutput ONLY a JSON object with exactly these five fields "
         "(no markdown fences, no extra text):\n"
-        '{"tldr": "...", "motivation": "...", "method": "...", '
-        '"result": "...", "conclusion": "..."}'
+        '{{"tldr": "...", "motivation": "...", "method": "...", '
+        '"result": "...", "conclusion": "..."}}'
     )
 
     prompt_template = ChatPromptTemplate.from_messages([
