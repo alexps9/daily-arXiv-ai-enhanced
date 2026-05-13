@@ -1,4 +1,11 @@
 exclude:
   - data/*.md
+  - to_md/
+  - SKILL/
+  - daily_arxiv/
+  - ai/
+  - "*.sh"
+  - "*.toml"
+  - "*.lock"
 include:
   - data/*.json
