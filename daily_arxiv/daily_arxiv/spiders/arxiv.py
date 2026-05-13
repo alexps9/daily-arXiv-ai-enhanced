@@ -27,6 +27,11 @@ class ArxivSpider(scrapy.Spider):
     name = "arxiv"
     allowed_domains = ["export.arxiv.org"]
 
+    custom_settings = {
+        # arXiv API 是官方公开接口，无需遵守 robots.txt 限制
+        "ROBOTSTXT_OBEY": False,
+    }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         config = load_config()

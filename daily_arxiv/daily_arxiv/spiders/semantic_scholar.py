@@ -47,10 +47,19 @@ class SemanticScholarSpider(scrapy.Spider):
     allowed_domains = ["api.semanticscholar.org"]
 
     custom_settings = {
-        # Semantic Scholar 免费 API: 1 req/s
-        "DOWNLOAD_DELAY": 1.2,
+        # Semantic Scholar 免费 API: ~1 req/s，加大延迟防止 429
+        "DOWNLOAD_DELAY": 5,
+        "RANDOMIZE_DOWNLOAD_DELAY": True,        # 随机化延迟，避免固定节奏触发限流
         "CONCURRENT_REQUESTS_PER_DOMAIN": 1,
+        "CONCURRENT_REQUESTS": 1,
         "ROBOTSTXT_OBEY": False,
+        # 429 也加入重试，并增大重试次数上限
+        "RETRY_HTTP_CODES": [429, 500, 502, 503, 504],
+        "RETRY_TIMES": 5,
+        "AUTOTHROTTLE_ENABLED": True,
+        "AUTOTHROTTLE_START_DELAY": 5,
+        "AUTOTHROTTLE_MAX_DELAY": 30,
+        "AUTOTHROTTLE_TARGET_CONCURRENCY": 0.5,
     }
 
     def __init__(self, *args, **kwargs):
@@ -99,6 +108,14 @@ class SemanticScholarSpider(scrapy.Spider):
 
     def parse(self, response):
         topic = response.meta["topic"]
+        # 429 仍然到达 parse 时（HttpErrorMiddleware 未拦截），直接重试
+        if response.status == 429:
+            self.logger.warning(f"[s2] 429 rate limit for topic='{topic}', will retry")
+            retry_req = response.request.copy()
+            retry_req.meta["dont_filter"] = True
+            retry_req.meta["download_delay"] = 10
+            yield retry_req
+            return
         try:
             data = json.loads(response.text)
         except json.JSONDecodeError:
