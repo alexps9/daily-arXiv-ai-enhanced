@@ -29,23 +29,18 @@ jobs:
         today=$(date -u "+%Y-%m-%d")
         echo "开始爬取 $today 安全相关 arXiv 论文..."
 
-        # 删除今日已存在的文件
+        # 删除今日已存在的文件（确保从干净状态开始）
+        mkdir -p data
         if [ -f "data/${today}.jsonl" ]; then
             echo "删除已存在的今日文件：data/${today}.jsonl"
             rm "data/${today}.jsonl"
         fi
 
-        cd daily_arxiv
-        export OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
-        export OPENAI_BASE_URL=${{ secrets.OPENAI_BASE_URL }}
-        export TOKEN_GITHUB=${{ secrets.TOKEN_GITHUB }}
-        export LANGUAGE="${{ vars.LANGUAGE }}"
-        export MODEL_NAME="${{ vars.MODEL_NAME }}"
-
-        # 爬取 arXiv（关键词搜索）
-        scrapy crawl arxiv -o ../data/${today}.jsonl
+        # 使用 Python 脚本直接调用 arxiv 库（自带限速，无 429 风险）
+        python daily_arxiv/fetch_arxiv.py --output data/${today}.jsonl
         echo "crawl_date=$today" >> $GITHUB_OUTPUT
-        echo "arXiv 爬取完成"
+        echo "arXiv 爬取完成，结果："
+        wc -l data/${today}.jsonl 2>/dev/null || echo "0 lines"
 
     - name: Crawl conference papers (Semantic Scholar)
       id: crawl_s2
@@ -54,13 +49,10 @@ jobs:
         today=${{ steps.crawl_arxiv.outputs.crawl_date }}
         echo "开始爬取会议论文（Semantic Scholar）..."
 
-        cd daily_arxiv
-        export OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
-        export OPENAI_BASE_URL=${{ secrets.OPENAI_BASE_URL }}
-
-        # 追加到今日文件（-a 模式）
-        scrapy crawl semantic_scholar -o ../data/${today}.jsonl
-        echo "会议论文爬取完成"
+        # 追加到今日文件（fetch_s2.py 使用 append 模式）
+        python daily_arxiv/fetch_s2.py --output data/${today}.jsonl
+        echo "会议论文爬取完成，当前总行数："
+        wc -l data/${today}.jsonl 2>/dev/null || echo "0 lines"
 
     - name: Check crawl result
       run: |
