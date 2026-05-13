@@ -1,9 +1,87 @@
 arxiv:
-  categories:  # Agent 相关 arXiv 分类
-    - cs.AI    # Artificial Intelligence（Agent 推理、规划、决策）
-    - cs.LG    # Machine Learning（Agent 训练、强化学习）
-    - cs.CL    # Computation and Language（LLM、Agent 语言能力）
-    - cs.MA    # Multiagent Systems（多智能体系统）
+  categories:  # 爬取的 arXiv 分类（覆盖 Agent 相关方向）
+    - cs.AI
+    - cs.LG
+    - cs.CL
+    - cs.MA
+
+# 自定义 topic 分类：按 title + abstract 关键词匹配，决定论文归属
+# categories[0] 将被设置为匹配到的 topic，用于前端分类展示
+# 关键词区分大小写不敏感；一篇论文只归属第一个匹配到的 topic
+topics:
+  - name: "Sec"
+    keywords:
+      - security
+      - safety
+      - attack
+      - jailbreak
+      - adversarial
+      - prompt injection
+      - red team
+      - backdoor
+      - poisoning
+      - vulnerability
+      - robustness
+      - alignment risk
+      - harmful
+      - misuse
+      - threat
+
+  - name: "Inference"
+    keywords:
+      - inference
+      - reasoning
+      - planning
+      - serving
+      - deployment
+      - chain-of-thought
+      - step-by-step
+      - in-context learning
+      - retrieval-augmented
+      - tool use
+      - tool call
+      - agent execution
+      - memory
+      - context window
+      - decoding
+      - speculative
+
+  - name: "Training"
+    keywords:
+      - training
+      - fine-tuning
+      - finetuning
+      - RLHF
+      - reinforcement learning
+      - reward model
+      - SFT
+      - DPO
+      - PPO
+      - GRPO
+      - data synthesis
+      - curriculum
+      - self-play
+      - pretraining
+      - post-training
+
+  - name: "Model"
+    keywords:
+      - language model
+      - large model
+      - architecture
+      - transformer
+      - attention mechanism
+      - scaling
+      - multimodal
+      - benchmark
+      - evaluation
+      - foundation model
+      - vision-language
+      - parameter
+      - efficiency
+      - compression
+      - quantization
+      - knowledge distillation
 
 llm:
-  model_name: 'deepseek-chat'  # 使用的LLM模型
+  model_name: 'deepseek-chat'
