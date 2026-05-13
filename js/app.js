@@ -702,6 +702,24 @@ async function fetchAvailableDates() {
     const response = await fetch(fileListUrl);
     if (!response.ok) {
       console.error('Error fetching file list:', response.status);
+      const container = document.getElementById('paperContainer');
+      if (container) {
+        container.innerHTML = `
+          <div class="loading-container" style="text-align:center;padding:60px 20px;">
+            <p style="font-size:18px;font-weight:600;color:#475569;margin-bottom:12px;">📭 暂无数据 / No Data Yet</p>
+            <p style="font-size:14px;color:#94a3b8;max-width:520px;margin:0 auto;line-height:1.7;">
+              数据文件尚未生成。请前往
+              <a href="https://github.com/alexps9/daily-arXiv-ai-enhanced/actions" target="_blank" style="color:#667eea;">GitHub Actions</a>
+              手动触发 <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:12px;">ai-sec-daily</code>
+              工作流（选择 <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:12px;">ai-sec</code> 分支），等待运行完成后刷新页面。<br><br>
+              No data files found. Please trigger the
+              <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:12px;">ai-sec-daily</code>
+              workflow in GitHub Actions (select the <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:12px;">ai-sec</code> branch)
+              and refresh after it completes (~30-60 min).
+            </p>
+          </div>
+        `;
+      }
       return [];
     }
     const text = await response.text();
@@ -932,7 +950,10 @@ function parseJsonlData(jsonlText, date) {
         conclusion: paper.AI && paper.AI.conclusion ? paper.AI.conclusion : '',
         code_url: paper.code_url || '',
         code_stars: paper.code_stars || 0,
-        code_last_update: paper.code_last_update || ''
+        code_last_update: paper.code_last_update || '',
+        source_display: paper.source_display || 'arXiv',
+        topic: paper.topic || allCategories[0] || '',
+        venue: paper.venue || paper.source_display || 'arXiv',
       });
     } catch (error) {
       console.error('解析JSON行失败:', error, line);
@@ -1399,6 +1420,10 @@ function renderPapers() {
     //   `;
     // }
 
+    const sourceDisplay = paper.source_display || 'arXiv';
+    const isArxiv = sourceDisplay === 'arXiv';
+    const sourceBadgeClass = isArxiv ? 'source-badge-arxiv' : 'source-badge-conf';
+
     paperCard.innerHTML = `
       <div class="paper-card-index">${index + 1}</div>
       ${paper.isMatched ? '<div class="match-badge" title="匹配您的搜索条件"></div>' : ''}
@@ -1407,6 +1432,7 @@ function renderPapers() {
         <p class="paper-card-authors">${formattedAuthors}</p>
         <div class="paper-card-categories">
           ${categoryTags}
+          <span class="source-badge ${sourceBadgeClass}" title="论文来源">${sourceDisplay}</span>
         </div>
       </div>
       <div class="paper-card-body">
