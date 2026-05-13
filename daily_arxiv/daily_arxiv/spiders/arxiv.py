@@ -52,15 +52,23 @@ class ArxivSpider(scrapy.Spider):
             if not keywords:
                 continue
 
-            # 构造 OR 查询：any keyword in title/abstract
-            kw_parts = [f'all:"{kw}"' for kw in keywords]
-            kw_query = " OR ".join(kw_parts)
-            date_filter = f"submittedDate:[{date_from} TO {date_to}]"
-            full_query = f"({kw_query}) AND {date_filter}"
+            # 构造宽松 OR 查询：用 ti/abs 字段匹配关键词（不加引号，避免过于严格）
+            # 短关键词用 ti（标题）匹配，效果更精准；长词用 abs（摘要）兜底
+            kw_parts = []
+            for kw in keywords:
+                words = kw.strip()
+                # 2 词以内优先匹配标题，更长的短语用全文搜索
+                if len(words.split()) <= 2:
+                    kw_parts.append(f'ti:{quote_plus(words)}')
+                else:
+                    kw_parts.append(f'all:{quote_plus(words)}')
+            kw_query = "+OR+".join(kw_parts)
+            date_filter = f"submittedDate:[{date_from}+TO+{date_to}]"
+            full_query = f"({kw_query})+AND+{date_filter}"
 
             url = (
                 "http://export.arxiv.org/api/query"
-                f"?search_query={quote_plus(full_query)}"
+                f"?search_query={full_query}"
                 f"&sortBy=submittedDate&sortOrder=descending"
                 f"&max_results={self.max_results}"
                 f"&start=0"

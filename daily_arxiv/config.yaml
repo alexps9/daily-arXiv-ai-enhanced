@@ -4,69 +4,81 @@
 topics:
   - name: "agent sec"
     description: "AI Agent 自身的安全问题（攻击、越狱、滥用等）"
+    # arXiv 用于短语 OR 查询；S2 取前 3 个词做语义搜索
     keywords:
-      - "LLM agent attack"
-      - "agent jailbreak"
+      - "agent security"
+      - "agent attack"
+      - "jailbreak agent"
+      - "prompt injection"
       - "multi-agent security"
-      - "agentic AI security"
-      - "autonomous agent threat"
-      - "tool-augmented LLM security"
+      - "LLM agent threat"
       - "agent hijacking"
+      - "tool-call attack"
+    # arXiv 额外类别过滤（可选补充，留空则纯关键词搜索）
+    arxiv_categories: ["cs.CR", "cs.AI"]
 
   - name: "agent for sec"
     description: "使用 AI Agent 辅助安全任务（漏洞检测、渗透测试等）"
     keywords:
-      - "LLM vulnerability detection"
-      - "AI penetration testing"
-      - "LLM malware analysis"
-      - "AI-assisted cybersecurity"
-      - "automated exploit generation"
-      - "LLM code security"
-      - "AI threat intelligence"
+      - "vulnerability detection"
+      - "penetration testing LLM"
+      - "exploit generation"
+      - "malware detection AI"
+      - "fuzzing LLM"
+      - "code security LLM"
+      - "threat intelligence AI"
+      - "bug detection neural"
+    arxiv_categories: ["cs.CR", "cs.SE", "cs.AI"]
 
   - name: "infra sec"
     description: "基础设施安全（容器、云、供应链等）"
     keywords:
       - "container security"
-      - "cloud security vulnerability"
-      - "software supply chain attack"
-      - "network intrusion detection"
+      - "cloud security"
+      - "supply chain attack"
+      - "network intrusion"
       - "firmware security"
       - "IoT security"
-      - "critical infrastructure protection"
+      - "SBOM security"
+      - "zero trust"
+    arxiv_categories: ["cs.CR", "cs.NI"]
 
   - name: "model sec"
     description: "AI 模型本身的安全问题（对抗样本、后门、成员推理等）"
     keywords:
-      - "adversarial attack deep learning"
-      - "backdoor attack neural network"
-      - "model poisoning attack"
-      - "membership inference attack"
-      - "model inversion attack"
+      - "adversarial attack"
+      - "backdoor attack"
       - "data poisoning"
-      - "neural network robustness"
+      - "membership inference"
+      - "model robustness"
+      - "model inversion"
+      - "trojan neural"
+      - "certified defense"
+    arxiv_categories: ["cs.CR", "cs.LG", "cs.CV"]
 
   - name: "frontier sec"
     description: "前沿大模型安全与 AI 治理（安全对齐、红队测试等）"
     keywords:
-      - "AI safety alignment"
-      - "frontier model risk"
+      - "AI safety"
+      - "AI alignment"
+      - "red teaming LLM"
+      - "jailbreak LLM"
       - "AI governance"
-      - "red teaming language model"
-      - "LLM jailbreak"
-      - "AI existential risk"
-      - "responsible AI"
+      - "LLM alignment"
+      - "harmful content LLM"
+      - "RLHF safety"
+    arxiv_categories: ["cs.CR", "cs.AI", "cs.CL"]
 
 sources:
   arxiv:
     enabled: true
-    max_results: 100        # 每个 topic 每次最多抓取数量
-    days_back: 2            # 仅抓取最近 N 天提交的论文
+    max_results: 200       # 每个 topic 每次最多抓取数量（增大避免漏检）
+    days_back: 3           # 最近 N 天（覆盖周末休刊）
 
   semantic_scholar:
     enabled: true
-    max_results: 50         # 每个 topic 最多抓取数量
-    days_back: 365          # 检索最近 N 天发表的论文
+    max_results: 100       # 每个 topic 最多抓取数量
+    days_back: 365         # 检索最近 N 天发表的论文
     venues:
       # 安全四大会
       - id: "sp"
@@ -114,7 +126,7 @@ sources:
       - id: "fse"
         name: "FSE"
         display: "FSE/ESEC"
-        match_keywords: ["FSE", "ESEC/FSE", "Foundations of Software Engineering"]
+        match_keywords: ["FSE", "ESEC/FSE", "Foundations of Software Engineering", "SIGSOFT FSE"]
       - id: "ase"
         name: "ASE"
         display: "ASE"
