@@ -682,6 +682,26 @@ main {
   border: 1px solid var(--border-accent);
 }
 
+/* 论文来源徽章 */
+.source-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+.source-badge-arxiv {
+  background-color: #fff7e6;
+  color: #b45309;
+  border: 1px solid #fcd34d;
+}
+.source-badge-conf {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+}
+
 .paper-card-body {
   padding: 20px;
   flex-grow: 1;

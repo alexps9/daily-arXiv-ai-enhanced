@@ -2,12 +2,9 @@
 数据处理 Pipeline
 - arXiv 来源：通过 arxiv 库补全论文详情（标题、作者、摘要等）
 - Semantic Scholar 来源：字段已由爬虫直接填充，跳过 arxiv 补全
+- 所有论文的 categories[0] 统一设置为 topic 名称，供前端分类渲染使用
 """
 import arxiv
-import json
-import os
-import sys
-from datetime import datetime, timedelta
 
 
 class DailyArxivPipeline:
@@ -31,9 +28,18 @@ class DailyArxivPipeline:
         source = item.get("source", "arxiv")
 
         if source == "arxiv":
-            return self._enrich_arxiv(item, spider)
+            result = self._enrich_arxiv(item, spider)
         else:
-            return self._enrich_conference(item, spider)
+            result = self._enrich_conference(item, spider)
+
+        if result is not None:
+            # 关键：将 categories[0] 设置为 topic，使前端"Category"过滤按 topic 分组
+            topic = result.get("topic", "unknown")
+            arxiv_cats = result.get("categories") or []
+            # topic 作为第一个分类，后面保留原始 arXiv 分类供参考
+            result["categories"] = [topic] + [c for c in arxiv_cats if c != topic]
+
+        return result
 
     def _enrich_arxiv(self, item: dict, spider) -> dict:
         """通过 arxiv Python 库补全 arXiv 论文字段"""
@@ -45,7 +51,7 @@ class DailyArxivPipeline:
             item["abs"] = f"https://arxiv.org/abs/{arxiv_id}"
             item["authors"] = [a.name for a in paper.authors]
             item["title"] = paper.title
-            item["categories"] = paper.categories
+            item["categories"] = list(paper.categories)
             item["comment"] = paper.comment
             item["summary"] = paper.summary
             item["year"] = paper.published.year if paper.published else None
@@ -61,18 +67,16 @@ class DailyArxivPipeline:
 
     def _enrich_conference(self, item: dict, spider) -> dict:
         """会议论文字段已由 Semantic Scholar 爬虫填充，仅做补全验证"""
-        required = ["title", "summary", "abs"]
-        for field in required:
+        required_fields = {"title": item.get("id", "Unknown Title"),
+                           "summary": "(No abstract available)"}
+        for field, fallback in required_fields.items():
             if not item.get(field):
                 spider.logger.warning(
                     f"[pipeline] Conference paper missing '{field}': {item.get('id')}"
                 )
-                if field == "summary":
-                    item["summary"] = "(No abstract available)"
-                elif field == "title":
-                    item["title"] = item.get("id", "Unknown Title")
+                item[field] = fallback
 
-        item.setdefault("categories", [item.get("source", "unknown")])
+        item.setdefault("categories", [])
         item.setdefault("pdf", "")
         item.setdefault("comment", None)
         item.setdefault("year", None)

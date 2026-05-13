@@ -932,7 +932,10 @@ function parseJsonlData(jsonlText, date) {
         conclusion: paper.AI && paper.AI.conclusion ? paper.AI.conclusion : '',
         code_url: paper.code_url || '',
         code_stars: paper.code_stars || 0,
-        code_last_update: paper.code_last_update || ''
+        code_last_update: paper.code_last_update || '',
+        source_display: paper.source_display || 'arXiv',
+        topic: paper.topic || allCategories[0] || '',
+        venue: paper.venue || paper.source_display || 'arXiv',
       });
     } catch (error) {
       console.error('解析JSON行失败:', error, line);
@@ -1399,6 +1402,10 @@ function renderPapers() {
     //   `;
     // }
 
+    const sourceDisplay = paper.source_display || 'arXiv';
+    const isArxiv = sourceDisplay === 'arXiv';
+    const sourceBadgeClass = isArxiv ? 'source-badge-arxiv' : 'source-badge-conf';
+
     paperCard.innerHTML = `
       <div class="paper-card-index">${index + 1}</div>
       ${paper.isMatched ? '<div class="match-badge" title="匹配您的搜索条件"></div>' : ''}
@@ -1407,6 +1414,7 @@ function renderPapers() {
         <p class="paper-card-authors">${formattedAuthors}</p>
         <div class="paper-card-categories">
           ${categoryTags}
+          <span class="source-badge ${sourceBadgeClass}" title="论文来源">${sourceDisplay}</span>
         </div>
       </div>
       <div class="paper-card-body">
