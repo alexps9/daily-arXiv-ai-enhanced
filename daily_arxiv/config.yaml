@@ -1,7 +1,129 @@
-arxiv:
-  categories:  # 文章类型
-    - cs.CV
-    - cs.CL
+# ai-sec 分支配置文件
+# 以安全相关 topic 为主题，覆盖 arXiv + 安全四大会 + AI顶会 + 软工顶会
+
+topics:
+  - name: "agent sec"
+    description: "AI Agent 自身的安全问题（攻击、越狱、滥用等）"
+    keywords:
+      - "LLM agent attack"
+      - "agent jailbreak"
+      - "multi-agent security"
+      - "agentic AI security"
+      - "autonomous agent threat"
+      - "tool-augmented LLM security"
+      - "agent hijacking"
+
+  - name: "agent for sec"
+    description: "使用 AI Agent 辅助安全任务（漏洞检测、渗透测试等）"
+    keywords:
+      - "LLM vulnerability detection"
+      - "AI penetration testing"
+      - "LLM malware analysis"
+      - "AI-assisted cybersecurity"
+      - "automated exploit generation"
+      - "LLM code security"
+      - "AI threat intelligence"
+
+  - name: "infra sec"
+    description: "基础设施安全（容器、云、供应链等）"
+    keywords:
+      - "container security"
+      - "cloud security vulnerability"
+      - "software supply chain attack"
+      - "network intrusion detection"
+      - "firmware security"
+      - "IoT security"
+      - "critical infrastructure protection"
+
+  - name: "model sec"
+    description: "AI 模型本身的安全问题（对抗样本、后门、成员推理等）"
+    keywords:
+      - "adversarial attack deep learning"
+      - "backdoor attack neural network"
+      - "model poisoning attack"
+      - "membership inference attack"
+      - "model inversion attack"
+      - "data poisoning"
+      - "neural network robustness"
+
+  - name: "frontier sec"
+    description: "前沿大模型安全与 AI 治理（安全对齐、红队测试等）"
+    keywords:
+      - "AI safety alignment"
+      - "frontier model risk"
+      - "AI governance"
+      - "red teaming language model"
+      - "LLM jailbreak"
+      - "AI existential risk"
+      - "responsible AI"
+
+sources:
+  arxiv:
+    enabled: true
+    max_results: 100        # 每个 topic 每次最多抓取数量
+    days_back: 2            # 仅抓取最近 N 天提交的论文
+
+  semantic_scholar:
+    enabled: true
+    max_results: 50         # 每个 topic 最多抓取数量
+    days_back: 365          # 检索最近 N 天发表的论文
+    venues:
+      # 安全四大会
+      - id: "sp"
+        name: "IEEE S&P"
+        display: "IEEE S&P"
+        match_keywords: ["IEEE Symposium on Security and Privacy", "IEEE S&P", "S&P 20"]
+      - id: "ccs"
+        name: "ACM CCS"
+        display: "ACM CCS"
+        match_keywords: ["ACM CCS", "ACM SIGSAC", "Computer and Communications Security"]
+      - id: "usenix"
+        name: "USENIX Security"
+        display: "USENIX Security"
+        match_keywords: ["USENIX Security", "USENIX Security Symposium"]
+      - id: "ndss"
+        name: "NDSS"
+        display: "NDSS"
+        match_keywords: ["NDSS", "Network and Distributed System Security"]
+      # AI 顶会
+      - id: "neurips"
+        name: "NeurIPS"
+        display: "NeurIPS"
+        match_keywords: ["NeurIPS", "Neural Information Processing Systems", "NIPS"]
+      - id: "icml"
+        name: "ICML"
+        display: "ICML"
+        match_keywords: ["ICML", "International Conference on Machine Learning"]
+      - id: "iclr"
+        name: "ICLR"
+        display: "ICLR"
+        match_keywords: ["ICLR", "International Conference on Learning Representations"]
+      - id: "aaai"
+        name: "AAAI"
+        display: "AAAI"
+        match_keywords: ["AAAI", "Association for the Advancement of Artificial Intelligence"]
+      - id: "ijcai"
+        name: "IJCAI"
+        display: "IJCAI"
+        match_keywords: ["IJCAI", "International Joint Conference on Artificial Intelligence"]
+      # 软工顶会
+      - id: "icse"
+        name: "ICSE"
+        display: "ICSE"
+        match_keywords: ["ICSE", "International Conference on Software Engineering"]
+      - id: "fse"
+        name: "FSE"
+        display: "FSE/ESEC"
+        match_keywords: ["FSE", "ESEC/FSE", "Foundations of Software Engineering"]
+      - id: "ase"
+        name: "ASE"
+        display: "ASE"
+        match_keywords: ["ASE", "Automated Software Engineering"]
+      - id: "issta"
+        name: "ISSTA"
+        display: "ISSTA"
+        match_keywords: ["ISSTA", "Software Testing and Analysis"]
 
 llm:
-  model_name: 'deepseek-chat'  # 使用的LLM模型
+  model_name: 'deepseek-chat'
+  base_url: 'https://api.deepseek.com'

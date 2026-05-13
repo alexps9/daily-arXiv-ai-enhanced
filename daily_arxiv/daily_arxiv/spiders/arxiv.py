@@ -1,77 +1,91 @@
+"""
+arXiv 关键词搜索爬虫
+通过 arXiv Atom API 按安全 topic 关键词搜索最近提交的论文
+"""
 import scrapy
 import os
-import re
+import yaml
+from urllib.parse import quote_plus
+from datetime import datetime, timedelta, timezone
+
+
+def load_config():
+    """加载 config.yaml，兼容从不同 cwd 运行"""
+    candidates = [
+        os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "config.yaml"),
+        os.path.join(os.getcwd(), "config.yaml"),
+        "config.yaml",
+    ]
+    for path in candidates:
+        if os.path.exists(path):
+            with open(path, encoding="utf-8") as f:
+                return yaml.safe_load(f)
+    raise FileNotFoundError("config.yaml not found")
 
 
 class ArxivSpider(scrapy.Spider):
+    name = "arxiv"
+    allowed_domains = ["export.arxiv.org"]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        categories = os.environ.get("CATEGORIES", "cs.CV")
-        categories = categories.split(",")
-        # 保存目标分类列表，用于后续验证
-        self.target_categories = set(map(str.strip, categories))
-        self.start_urls = [
-            f"https://arxiv.org/list/{cat}/new" for cat in self.target_categories
-        ]  # 起始URL（计算机科学领域的最新论文）
+        config = load_config()
+        self.topics = config.get("topics", [])
+        arxiv_cfg = config.get("sources", {}).get("arxiv", {})
+        self.max_results = int(arxiv_cfg.get("max_results", 100))
+        self.days_back = int(arxiv_cfg.get("days_back", 2))
 
-    name = "arxiv"  # 爬虫名称
-    allowed_domains = ["arxiv.org"]  # 允许爬取的域名
+    def start_requests(self):
+        # 计算日期窗口（UTC）
+        now_utc = datetime.now(timezone.utc)
+        date_from = (now_utc - timedelta(days=self.days_back)).strftime("%Y%m%d") + "0000"
+        date_to = now_utc.strftime("%Y%m%d") + "2359"
+
+        for topic in self.topics:
+            topic_name = topic["name"]
+            keywords = topic.get("keywords", [])
+            if not keywords:
+                continue
+
+            # 构造 OR 查询：any keyword in title/abstract
+            kw_parts = [f'all:"{kw}"' for kw in keywords]
+            kw_query = " OR ".join(kw_parts)
+            date_filter = f"submittedDate:[{date_from} TO {date_to}]"
+            full_query = f"({kw_query}) AND {date_filter}"
+
+            url = (
+                "http://export.arxiv.org/api/query"
+                f"?search_query={quote_plus(full_query)}"
+                f"&sortBy=submittedDate&sortOrder=descending"
+                f"&max_results={self.max_results}"
+                f"&start=0"
+            )
+            self.logger.info(f"[arxiv] topic='{topic_name}' url={url}")
+            yield scrapy.Request(
+                url,
+                callback=self.parse,
+                meta={"topic": topic_name},
+            )
 
     def parse(self, response):
-        # 提取每篇论文的信息
-        anchors = []
-        for li in response.css("div[id=dlpage] ul li"):
-            href = li.css("a::attr(href)").get()
-            if href and "item" in href:
-                anchors.append(int(href.split("item")[-1]))
+        topic = response.meta["topic"]
+        response.selector.remove_namespaces()
 
-        # 遍历每篇论文的详细信息
-        for paper in response.css("dl dt"):
-            paper_anchor = paper.css("a[name^='item']::attr(name)").get()
-            if not paper_anchor:
-                continue
-                
-            paper_id = int(paper_anchor.split("item")[-1])
-            if anchors and paper_id >= anchors[-1]:
+        for entry in response.css("entry"):
+            # arXiv 标准 ID URL: http://arxiv.org/abs/2401.12345v1
+            id_url = entry.css("id::text").get("").strip()
+            if not id_url:
                 continue
 
-            # 获取论文ID
-            abstract_link = paper.css("a[title='Abstract']::attr(href)").get()
-            if not abstract_link:
+            # 提取纯 ID（去掉版本号）
+            arxiv_id = id_url.split("/abs/")[-1].split("v")[0] if "/abs/" in id_url else id_url.split("/")[-1]
+            if not arxiv_id:
                 continue
-                
-            arxiv_id = abstract_link.split("/")[-1]
-            
-            # 获取对应的论文描述部分 (dd元素)
-            paper_dd = paper.xpath("following-sibling::dd[1]")
-            if not paper_dd:
-                continue
-            
-            # 提取论文分类信息 - 在subjects部分
-            subjects_text = paper_dd.css(".list-subjects .primary-subject::text").get()
-            if not subjects_text:
-                # 如果找不到主分类，尝试其他方式获取分类
-                subjects_text = paper_dd.css(".list-subjects::text").get()
-            
-            if subjects_text:
-                # 解析分类信息，通常格式如 "Computer Vision and Pattern Recognition (cs.CV)"
-                # 提取括号中的分类代码
-                categories_in_paper = re.findall(r'\(([^)]+)\)', subjects_text)
-                
-                # 检查论文分类是否与目标分类有交集
-                paper_categories = set(categories_in_paper)
-                if paper_categories.intersection(self.target_categories):
-                    yield {
-                        "id": arxiv_id,
-                        "categories": list(paper_categories),  # 添加分类信息用于调试
-                    }
-                    self.logger.info(f"Found paper {arxiv_id} with categories {paper_categories}")
-                else:
-                    self.logger.debug(f"Skipped paper {arxiv_id} with categories {paper_categories} (not in target {self.target_categories})")
-            else:
-                # 如果无法获取分类信息，记录警告但仍然返回论文（保持向后兼容）
-                self.logger.warning(f"Could not extract categories for paper {arxiv_id}, including anyway")
-                yield {
-                    "id": arxiv_id,
-                    "categories": [],
-                }
+
+            yield {
+                "id": arxiv_id,
+                "source": "arxiv",
+                "source_display": "arXiv",
+                "topic": topic,
+            }
+            self.logger.debug(f"[arxiv] topic='{topic}' paper={arxiv_id}")

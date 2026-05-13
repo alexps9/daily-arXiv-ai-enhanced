@@ -1,7 +1,7 @@
 ### [{idx}] [{title}]({url})
 *{authors}*
 
-Main category: {cate}
+**Topic:** {topic} &nbsp;|&nbsp; **Source:** `{source_display}` &nbsp;|&nbsp; **Venue:** {venue}
 
 TL;DR: {tldr}
 
