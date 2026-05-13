@@ -42,12 +42,12 @@ jobs:
         echo "arXiv 爬取完成，结果："
         wc -l data/${today}.jsonl 2>/dev/null || echo "0 lines"
 
-    - name: Crawl conference papers (Semantic Scholar)
+    - name: Crawl conference papers (OpenAlex)
       id: crawl_s2
       run: |
         source .venv/bin/activate
         today=${{ steps.crawl_arxiv.outputs.crawl_date }}
-        echo "开始爬取会议论文（Semantic Scholar）..."
+        echo "开始爬取会议论文（OpenAlex）..."
 
         # 追加到今日文件（fetch_s2.py 使用 append 模式）
         python daily_arxiv/fetch_s2.py --output data/${today}.jsonl
