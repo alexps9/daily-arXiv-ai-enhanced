@@ -117,7 +117,7 @@ jobs:
         export OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
         export OPENAI_BASE_URL="https://api.deepseek.com"
         export LANGUAGE="${{ vars.LANGUAGE }}"
-        export MODEL_NAME="deepseek-chat"
+        export MODEL_NAME="deepseek-v4-pro"
 
         python enhance.py --data ../data/${today}.jsonl --max_workers 4
 
