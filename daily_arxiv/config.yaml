@@ -1,7 +1,9 @@
 arxiv:
-  categories:  # 文章类型
-    - cs.CV
-    - cs.CL
+  categories:  # Agent 相关 arXiv 分类
+    - cs.AI    # Artificial Intelligence（Agent 推理、规划、决策）
+    - cs.LG    # Machine Learning（Agent 训练、强化学习）
+    - cs.CL    # Computation and Language（LLM、Agent 语言能力）
+    - cs.MA    # Multiagent Systems（多智能体系统）
 
 llm:
   model_name: 'deepseek-chat'  # 使用的LLM模型
